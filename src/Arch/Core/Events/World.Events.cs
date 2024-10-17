@@ -29,6 +29,24 @@ public partial class World
     private readonly List<EntityDestroyedHandler> _entityDestroyedHandlers = new(InitialCapacity);
 
     /// <summary>
+    ///     All <see cref="ComponentAddedHandler"/>s in a <see cref="List{T}"/> which will be called upon component addition.
+    /// </summary>
+    private readonly List<ComponentAddedHandler> _componentAddedHandlers = new(InitialCapacity);
+
+    /// <summary>
+    ///     All <see cref="ComponentSetHandler"/>s in a <see cref="List{T}"/> which will be called upon component set.
+    /// </summary>
+    private readonly List<ComponentSetHandler> _componentSetHandlers = new(InitialCapacity);
+
+    /// <summary>
+    ///     All <see cref="ComponentRemovedHandler"/>s in a <see cref="List{T}"/> which will be called upon component deletion.
+    /// </summary>
+    private readonly List<ComponentRemovedHandler> _componentRemovedHandlers = new(InitialCapacity);
+
+    
+    
+
+    /// <summary>
     ///     All <see cref="Events"/> in an array which will be acessed for add, remove or set operations.
     /// </summary>
     private Events.Events[] _compEvents = new Events.Events[InitialCapacity];
@@ -88,6 +106,21 @@ public partial class World
     }
 
     /// <summary>
+    ///     Adds a delegate to be called when any component is added to an entity.
+    ///     <see cref="Add"/>
+    /// </summary>
+    /// <param name="handler">The delegate to call.</param>
+    public void SubscribeComponentAdded(ComponentAddedHandler handler)
+    {
+#if EVENTS
+        lock (_componentAddedHandlers)
+        {
+            _componentAddedHandlers.Add(handler);
+        }
+#endif
+    }
+
+    /// <summary>
     ///     Adds a delegate to be called when a component of type <typeparamref name="T"/> is set on an entity.
     ///     <see cref="Set"/>
     /// </summary>
@@ -114,6 +147,21 @@ public partial class World
     }
 
     /// <summary>
+    ///     Adds a delegate to be called when any component is set on an entity.
+    ///     <see cref="Set"/>
+    /// </summary>
+    /// <param name="handler">The delegate to call.</param>
+    public void SubscribeComponentSet(ComponentSetHandler handler)
+    {
+#if EVENTS
+        lock (_componentSetHandlers)
+        {
+            _componentSetHandlers.Add(handler);
+        }
+#endif
+    }
+
+    /// <summary>
     ///     Adds a delegate to be called when a component of type <typeparamref name="T"/> is removed from an entity.
     ///     <see cref="Remove"/>
     /// </summary>
@@ -135,6 +183,21 @@ public partial class World
                 ref var compGeneric = ref Get<T>(entity);
                 handler(entity, ref compGeneric);
             });
+        }
+#endif
+    }
+
+    /// <summary>
+    ///     Adds a delegate to be called when any component is removed from an entity.
+    ///     <see cref="Remove"/>
+    /// </summary>
+    /// <param name="handler">The delegate to call.</param>
+    public void SubscribeComponentRemoved(ComponentRemovedHandler handler)
+    {
+#if EVENTS
+        lock (_componentRemovedHandlers)
+        {
+            _componentRemovedHandlers.Add(handler);
         }
 #endif
     }
@@ -222,6 +285,22 @@ public partial class World
 
             handler(in entity, ref added);
         }
+
+        lock (_componentAddedHandlers)
+        {
+            count = _componentAddedHandlers.Count;
+        }
+
+        for (var i = 0; i < _componentAddedHandlers.Count; i++)
+        {
+            ComponentAddedHandler handler;
+            lock (_componentAddedHandlers)
+            {
+                handler = _componentAddedHandlers[i];
+            }
+
+            handler.Invoke(in entity);
+        }
 #endif
     }
 
@@ -253,6 +332,22 @@ public partial class World
 
             handler(in entity, ref set);
         }
+
+        lock (_componentSetHandlers)
+        {
+            count = _componentSetHandlers.Count;
+        }
+
+        for (var i = 0; i < _componentSetHandlers.Count; i++)
+        {
+            ComponentSetHandler handler;
+            lock (_componentSetHandlers)
+            {
+                handler = _componentSetHandlers[i];
+            }
+
+            handler.Invoke(in entity);
+        }
 #endif
     }
 
@@ -283,6 +378,22 @@ public partial class World
             }
 
             handler(in entity, ref removed);
+        }
+
+        lock (_componentRemovedHandlers)
+        {
+            count = _componentRemovedHandlers.Count;
+        }
+
+        for (var i = 0; i < _componentRemovedHandlers.Count; i++)
+        {
+            ComponentRemovedHandler handler;
+            lock (_componentRemovedHandlers)
+            {
+                handler = _componentRemovedHandlers[i];
+            }
+
+            handler.Invoke(in entity);
         }
 #endif
     }
