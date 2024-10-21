@@ -73,6 +73,10 @@ Fixed some DangerousUtilities. </PackageReleaseNotes>
     <InternalsVisibleTo Include="Arch.Tests" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <NoWarn>CS1572;CS1573;CS1574;CS1591;CS1723;CS8619;IDE0025;IDE0032;IDE2003;IDE0003;RS1024;CS1711;nullable</NoWarn>
+  </PropertyGroup>
+  
   <ItemGroup>
     <Using Include="System" />
     <Using Include="System.Collections" />
